@@ -169,6 +169,44 @@ export default function PolygonShapesExample() {
 
 </ComponentExample>
 
+### Morph between shapes
+
+Use `Shape.Morph` to smoothly interpolate between two `Shape` primitives on Android. Update
+`progress` between `0` (the starting shape) and `1` (the destination). By default, Compose
+animates the change with a native spring, without requiring a per-frame JavaScript update.
+
+```tsx
+import { Host, Shape } from '@expo/ui/jetpack-compose';
+import { size } from '@expo/ui/jetpack-compose/modifiers';
+import { useState } from 'react';
+import { Button, View } from 'react-native';
+
+export default function ShapeMorphExample() {
+  const [isStar, setIsStar] = useState(false);
+
+  return (
+    <View style={{ alignItems: 'center', gap: 16 }}>
+      <Host style={{ width: 160, height: 160 }}>
+        <Shape.Morph
+          from={<Shape.Circle radius={1} />}
+          to={<Shape.Star verticesCount={8} radius={1} innerRadius={0.5} />}
+          progress={isStar ? 1 : 0}
+          color="#6750A4"
+          modifiers={[size(160, 160)]}
+        />
+      </Host>
+      <Button
+        title={isStar ? 'Circle' : 'Star'}
+        onPress={() => setIsStar((current) => !current)}
+      />
+    </View>
+  );
+}
+```
+
+For gestures or frame-by-frame control, set `animated={false}` to use `progress` directly.
+Morphing uses Android Graphics Shapes' `RoundedPolygon` interpolation; it does not accept arbitrary SVG paths.
+
 ## API
 
 ```tsx
