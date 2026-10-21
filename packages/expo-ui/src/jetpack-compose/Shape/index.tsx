@@ -183,8 +183,8 @@ const ShapeMorphNativeView: React.ComponentType<NativeShapeMorphProps> = require
  *
  * @example
  * <Shape.Morph
- *   from={<Shape.Circle radius={1} />}
- *   to={<Shape.Star radius={1} innerRadius={0.45} verticesCount={8} />}
+ *   from={Shape.Circle({ radius: 1 })}
+ *   to={Shape.Star({ radius: 1, innerRadius: 0.45, verticesCount: 8 })}
  *   progress={expanded ? 1 : 0}
  *   color="#6750A4"
  *   modifiers={[size(160, 160)]}
