@@ -1,7 +1,7 @@
 import { Host, Shape, Row } from '@expo/ui/jetpack-compose';
 import { rotate, size } from '@expo/ui/jetpack-compose/modifiers';
-import { useEffect } from 'react';
-import { View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Button, View } from 'react-native';
 import Animated, {
   Easing,
   useSharedValue,
@@ -25,6 +25,7 @@ const pastelPalette = {
 };
 
 export default function UIScreen() {
+  const [morphActive, setMorphActive] = useState(false);
   const oneToZero = useSharedValue<number | undefined>(1);
 
   useEffect(() => {
@@ -72,6 +73,29 @@ export default function UIScreen() {
 
   return (
     <Page>
+      <View style={{ alignItems: 'center', gap: 12, paddingVertical: 24 }}>
+        <Host style={{ width: 180, height: 180 }}>
+          <Shape.Morph
+            from={<Shape.Circle radius={1} />}
+            to={
+              <Shape.Star
+                radius={1}
+                innerRadius={0.5}
+                verticesCount={8}
+                cornerRounding={0.08}
+                smoothing={0.4}
+              />
+            }
+            progress={morphActive ? 1 : 0}
+            color={pastelPalette.color1}
+            modifiers={[size(180, 180)]}
+          />
+        </Host>
+        <Button
+          title={morphActive ? 'Morph to circle' : 'Morph to star'}
+          onPress={() => setMorphActive((current) => !current)}
+        />
+      </View>
       <View
         style={{
           display: 'flex',
