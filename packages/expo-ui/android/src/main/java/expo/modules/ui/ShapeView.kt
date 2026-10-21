@@ -100,7 +100,7 @@ private fun createPillPolygon(size: Size, smoothing: Float): RoundedPolygon {
   )
 }
 
-private fun createPolygonPolygon(size: Size, cornerRounding: Float, smoothing: Float, verticesCount: Int): RoundedPolygon {
+private fun createRegularPolygon(size: Size, cornerRounding: Float, smoothing: Float, verticesCount: Int): RoundedPolygon {
   val rounding = CornerRounding(size.minDimension * cornerRounding, smoothing = smoothing)
   return RoundedPolygon(
     numVertices = verticesCount.coerceAtLeast(3),
@@ -175,7 +175,7 @@ fun roundedPolygonFromShapeRecord(record: ShapeRecord, size: Size, density: Dens
     ShapeType.PILL -> createPillPolygon(size, record.smoothing)
     ShapeType.CIRCLE -> createCirclePolygon(size, record.radius, record.verticesCount)
     ShapeType.RECTANGLE -> createRectanglePolygon(size, record.cornerRounding, record.smoothing)
-    ShapeType.POLYGON -> createPolygonPolygon(size, record.cornerRounding, record.smoothing, record.verticesCount)
+    ShapeType.POLYGON -> createRegularPolygon(size, record.cornerRounding, record.smoothing, record.verticesCount)
     ShapeType.ROUNDED_CORNER -> {
       val radii = record.cornerRadii ?: CornerRadii()
       // Graphics Shapes rectangle vertices: bottom-right, bottom-left, top-left, top-right.
