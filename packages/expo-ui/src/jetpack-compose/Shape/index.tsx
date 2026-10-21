@@ -139,8 +139,72 @@ function RoundedCorner(props: Pick<ShapeProps, 'cornerRadii' | 'color' | 'modifi
   return (<ShapeNativeView {...transformProps(props)} type="roundedCorner" />) as ShapeJSXElement;
 }
 
+/**
+ * Props for `Shape.Morph`, which interpolates between two polygonal shapes using
+ * Android Graphics Shapes and Jetpack Compose animation.
+ */
+export interface ShapeMorphProps {
+  /** Starting shape, expressed as one of the `Shape.*` elements. */
+  from: ShapeJSXElement;
+  /** Destination shape, expressed as one of the `Shape.*` elements. */
+  to: ShapeJSXElement;
+  /**
+   * Target morph progress from 0 (from) to 1 (to).
+   * Changes are animated on the native side unless `animated` is false.
+   * @default 0
+   */
+  progress?: number;
+  /**
+   * Animate progress changes using a native spring.
+   * Set to false for manually driven progress, such as gestures.
+   * @default true
+   */
+  animated?: boolean;
+  /** Fill color of the interpolated shape. */
+  color?: ColorValue;
+  /** Compose modifiers for layout and interaction. */
+  modifiers?: ExpoModifier[];
+}
+
+type NativeShapeMorphProps = Omit<ShapeMorphProps, 'from' | 'to' | 'modifiers'> & {
+  from: ShapeRecordProps;
+  to: ShapeRecordProps;
+  modifiers?: unknown;
+};
+
+const ShapeMorphNativeView: React.ComponentType<NativeShapeMorphProps> = requireNativeView(
+  'ExpoUI',
+  'ShapeMorphView'
+);
+
+/**
+ * Morphs between two Shape primitives. The entire shape interpolation is
+ * rendered in Compose; JS only updates the target progress.
+ *
+ * @example
+ * <Shape.Morph
+ *   from={<Shape.Circle radius={1} />}
+ *   to={<Shape.Star radius={1} innerRadius={0.45} verticesCount={8} />}
+ *   progress={expanded ? 1 : 0}
+ *   color="#6750A4"
+ *   modifiers={[size(160, 160)]}
+ * />
+ */
+function Morph({ from, to, modifiers, ...props }: ShapeMorphProps) {
+  return (
+    <ShapeMorphNativeView
+      {...props}
+      from={parseJSXShape(from)}
+      to={parseJSXShape(to)}
+      modifiers={modifiers}
+      {...(modifiers ? createViewModifierEventListener(modifiers) : undefined)}
+    />
+  );
+}
+
 export const Shape = {
   Star,
+  Morph,
   PillStar,
   Pill,
   Circle,
