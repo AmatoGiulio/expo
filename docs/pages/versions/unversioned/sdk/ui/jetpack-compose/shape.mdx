@@ -188,8 +188,8 @@ export default function ShapeMorphExample() {
     <View style={{ alignItems: 'center', gap: 16 }}>
       <Host style={{ width: 160, height: 160 }}>
         <Shape.Morph
-          from={<Shape.Circle radius={1} />}
-          to={<Shape.Star verticesCount={8} radius={1} innerRadius={0.5} />}
+          from={Shape.Circle({ radius: 1 })}
+          to={Shape.Star({ verticesCount: 8, radius: 1, innerRadius: 0.5 })}
           progress={isStar ? 1 : 0}
           color="#6750A4"
           modifiers={[size(160, 160)]}
