@@ -76,16 +76,14 @@ export default function UIScreen() {
       <View style={{ alignItems: 'center', gap: 12, paddingVertical: 24 }}>
         <Host style={{ width: 180, height: 180 }}>
           <Shape.Morph
-            from={<Shape.Circle radius={1} />}
-            to={
-              <Shape.Star
-                radius={1}
-                innerRadius={0.5}
-                verticesCount={8}
-                cornerRounding={0.08}
-                smoothing={0.4}
-              />
-            }
+            from={Shape.Circle({ radius: 1 })}
+            to={Shape.Star({
+              radius: 1,
+              innerRadius: 0.5,
+              verticesCount: 8,
+              cornerRounding: 0.08,
+              smoothing: 0.4,
+            })}
             progress={morphActive ? 1 : 0}
             color={pastelPalette.color1}
             modifiers={[size(180, 180)]}
