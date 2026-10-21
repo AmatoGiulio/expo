@@ -65,7 +65,7 @@ data class ShapeProps(
 private fun Size.centerX() = this.width / 2
 private fun Size.centerY() = this.height / 2
 
-private fun createStarPath(size: Size, cornerRounding: Float, smoothing: Float, innerRadius: Float, radius: Float, verticesCount: Int): Path {
+private fun createStarPolygon(size: Size, cornerRounding: Float, smoothing: Float, innerRadius: Float, radius: Float, verticesCount: Int): RoundedPolygon {
   val rounding = CornerRounding(size.minDimension * cornerRounding, smoothing = smoothing)
   return RoundedPolygon.star(
     numVerticesPerRadius = verticesCount,
@@ -74,10 +74,10 @@ private fun createStarPath(size: Size, cornerRounding: Float, smoothing: Float, 
     centerX = size.centerX(),
     centerY = size.centerY(),
     rounding = rounding
-  ).toPath().asComposePath()
+  )
 }
 
-private fun createPillStarPath(size: Size, cornerRounding: Float, smoothing: Float, innerRadius: Float, verticesCount: Int): Path {
+private fun createPillStarPolygon(size: Size, cornerRounding: Float, smoothing: Float, innerRadius: Float, verticesCount: Int): RoundedPolygon {
   val rounding = CornerRounding(size.minDimension * cornerRounding, smoothing = smoothing)
   return RoundedPolygon.pillStar(
     numVerticesPerRadius = verticesCount,
@@ -87,20 +87,20 @@ private fun createPillStarPath(size: Size, cornerRounding: Float, smoothing: Flo
     centerX = size.centerX(),
     centerY = size.centerY(),
     rounding = rounding
-  ).toPath().asComposePath()
+  )
 }
 
-private fun createPillPath(size: Size, smoothing: Float): Path {
+private fun createPillPolygon(size: Size, smoothing: Float): RoundedPolygon {
   return RoundedPolygon.pill(
     centerX = size.centerX(),
     centerY = size.centerY(),
     width = size.width,
     height = size.height,
     smoothing = smoothing
-  ).toPath().asComposePath()
+  )
 }
 
-private fun createPolygonPath(size: Size, cornerRounding: Float, smoothing: Float, verticesCount: Int): Path {
+private fun createPolygonPolygon(size: Size, cornerRounding: Float, smoothing: Float, verticesCount: Int): RoundedPolygon {
   val rounding = CornerRounding(size.minDimension * cornerRounding, smoothing = smoothing)
   return RoundedPolygon(
     numVertices = verticesCount.coerceAtLeast(3),
@@ -108,19 +108,19 @@ private fun createPolygonPath(size: Size, cornerRounding: Float, smoothing: Floa
     centerX = size.centerX(),
     centerY = size.centerY(),
     rounding = rounding
-  ).toPath().asComposePath()
+  )
 }
 
-private fun createCirclePath(size: Size, radius: Float, verticesCount: Int): Path {
+private fun createCirclePolygon(size: Size, radius: Float, verticesCount: Int): RoundedPolygon {
   return RoundedPolygon.circle(
     centerX = size.centerX(),
     centerY = size.centerY(),
     radius = size.minDimension * 0.5f * radius.coerceAtLeast(0.002f),
     numVertices = verticesCount.coerceAtLeast(3)
-  ).toPath().asComposePath()
+  )
 }
 
-private fun createRectanglePath(size: Size, cornerRounding: Float, smoothing: Float): Path {
+private fun createRectanglePolygon(size: Size, cornerRounding: Float, smoothing: Float): RoundedPolygon {
   val rounding = CornerRounding(size.minDimension * cornerRounding, smoothing = smoothing)
   return RoundedPolygon.rectangle(
     centerX = size.centerX(),
@@ -128,7 +128,7 @@ private fun createRectanglePath(size: Size, cornerRounding: Float, smoothing: Fl
     rounding = rounding,
     width = size.width,
     height = size.height
-  ).toPath().asComposePath()
+  )
 }
 
 private fun createRoundedCornerPath(size: Size, cornerRadii: CornerRadii?, density: Density): Path {
@@ -164,16 +164,47 @@ data class ShapeRecord(
   val type: ShapeType = ShapeType.CIRCLE
 ) : Record
 
+/**
+ * Uses the same polygon geometry as ShapeContent. Morph requires RoundedPolygon
+ * endpoints (it cannot interpolate arbitrary Compose Paths).
+ */
+fun roundedPolygonFromShapeRecord(record: ShapeRecord, size: Size, density: Density): RoundedPolygon {
+  return when (record.type) {
+    ShapeType.STAR -> createStarPolygon(size, record.cornerRounding, record.smoothing, record.innerRadius, record.radius, record.verticesCount)
+    ShapeType.PILL_STAR -> createPillStarPolygon(size, record.cornerRounding, record.smoothing, record.innerRadius, record.verticesCount)
+    ShapeType.PILL -> createPillPolygon(size, record.smoothing)
+    ShapeType.CIRCLE -> createCirclePolygon(size, record.radius, record.verticesCount)
+    ShapeType.RECTANGLE -> createRectanglePolygon(size, record.cornerRounding, record.smoothing)
+    ShapeType.POLYGON -> createPolygonPolygon(size, record.cornerRounding, record.smoothing, record.verticesCount)
+    ShapeType.ROUNDED_CORNER -> {
+      val radii = record.cornerRadii ?: CornerRadii()
+      // Graphics Shapes rectangle vertices: bottom-right, bottom-left, top-left, top-right.
+      val vertexRounding = with(density) {
+        listOf(
+          CornerRounding(radii.bottomEnd.dp.toPx().coerceAtLeast(0f)),
+          CornerRounding(radii.bottomStart.dp.toPx().coerceAtLeast(0f)),
+          CornerRounding(radii.topStart.dp.toPx().coerceAtLeast(0f)),
+          CornerRounding(radii.topEnd.dp.toPx().coerceAtLeast(0f))
+        )
+      }
+      RoundedPolygon.rectangle(
+        width = size.width,
+        height = size.height,
+        perVertexRounding = vertexRounding,
+        centerX = size.centerX(),
+        centerY = size.centerY()
+      )
+    }
+  }
+}
+
 fun pathFromShapeRecord(record: ShapeRecord, size: Size, density: Density): Path {
   return runCatching {
-    when (record.type) {
-      ShapeType.STAR -> createStarPath(size = size, cornerRounding = record.cornerRounding, smoothing = record.smoothing, innerRadius = record.innerRadius, radius = record.radius, verticesCount = record.verticesCount)
-      ShapeType.PILL_STAR -> createPillStarPath(size = size, cornerRounding = record.cornerRounding, smoothing = record.smoothing, innerRadius = record.innerRadius, verticesCount = record.verticesCount)
-      ShapeType.PILL -> createPillPath(size = size, smoothing = record.smoothing)
-      ShapeType.CIRCLE -> createCirclePath(size = size, radius = record.radius, verticesCount = record.verticesCount)
-      ShapeType.RECTANGLE -> createRectanglePath(size = size, cornerRounding = record.cornerRounding, smoothing = record.smoothing)
-      ShapeType.POLYGON -> createPolygonPath(size = size, cornerRounding = record.cornerRounding, smoothing = record.smoothing, verticesCount = record.verticesCount)
-      ShapeType.ROUNDED_CORNER -> createRoundedCornerPath(size = size, cornerRadii = record.cornerRadii, density = density)
+    // Preserve the existing Compose corner rendering outside of morph animations.
+    if (record.type == ShapeType.ROUNDED_CORNER) {
+      createRoundedCornerPath(size, record.cornerRadii, density)
+    } else {
+      roundedPolygonFromShapeRecord(record, size, density).toPath().asComposePath()
     }
   }.getOrNull() ?: Path()
 }
