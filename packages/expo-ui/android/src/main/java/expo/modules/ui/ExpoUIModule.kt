@@ -380,6 +380,12 @@ class ExpoUIModule : Module() {
       }
     }
 
+    ExpoUIView<ShapeMorphProps>("ShapeMorphView") {
+      Content { props ->
+        ShapeMorphContent(props)
+      }
+    }
+
     ExpoUIView<DividerProps>("HorizontalDividerView") {
       Content { props ->
         HorizontalDividerContent(props)
